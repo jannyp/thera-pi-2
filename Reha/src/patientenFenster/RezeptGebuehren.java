@@ -101,7 +101,6 @@ public class RezeptGebuehren extends RehaSmartDialog implements RehaTPEventListe
 		rgb = new RgebHintergrund();
 		rgb.setLayout(new BorderLayout());
 		new SwingWorker<Void,Void>(){
-
 			@Override
 			protected Void doInBackground() throws Exception {
 				try{
@@ -111,8 +110,8 @@ public class RezeptGebuehren extends RehaSmartDialog implements RehaTPEventListe
 				}
 				return null;
 			}
-			
-		}.execute();	
+		}.execute();
+		
 		rgb.add(getGebuehren(),BorderLayout.CENTER);
 		
 		getSmartTitledPanel().setContentContainer(rgb);
@@ -514,7 +513,8 @@ public class RezeptGebuehren extends RehaSmartDialog implements RehaTPEventListe
 				Reha.thisClass.patpanel.patDaten.get(2)+","+
 				SystemConfig.hmAdrRDaten.get("<Rnummer>")+"', "+
 				"pat_intern='"+SystemConfig.hmAdrRDaten.get("<Rpatid>")+"', "+
-				"rez_nr='"+SystemConfig.hmAdrRDaten.get("<Rnummer>")+"'";
+				"rez_nr='"+SystemConfig.hmAdrRDaten.get("<Rnummer>")+"' ," +
+				"user='"+ Reha.aktUser +"'";
 				SqlInfo.sqlAusfuehren(cmd);
 				////System.out.println("Kassenbuch -> "+cmd);
 			}catch(Exception ex){

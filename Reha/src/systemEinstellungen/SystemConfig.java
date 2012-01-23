@@ -50,8 +50,10 @@ public class SystemConfig {
 	public static boolean[] RoogleTage = {false,false,false,false,false,false,false};
 	public static int RoogleZeitraum;
 	public static HashMap<String,String> RoogleZeiten = null;
+	
+	public static boolean[] taskPaneCollapsed = {false,false,true,true,false,true};
 	/**
-	 * nachfolgende static's sind notwendig f�r den Einsatz des Terminkalenders
+	 * nachfolgende static's sind notwendig für den Einsatz des Terminkalenders
 	 */
 	public static ArrayList<ArrayList<ArrayList<String[]>>> aTerminKalender;
 	public static int AnzahlKollegen;
@@ -62,10 +64,14 @@ public class SystemConfig {
 	public static String KalenderStartWADefaultUser = "./.";
 	public static String KalenderStartNADefaultSet = "./.";
 	public static boolean KalenderZeitLabelZeigen = false;
+	public static boolean KalenderWochenTagZeigen = false;
+	public static boolean KalenderTimeLineZeigen = false;
 	public static String[]  KalenderUmfang =  {null,null};
 	public static long[]  KalenderMilli =  {0,0};
 	public static int UpdateIntervall;
 	public static float KalenderAlpha = 0.0f;
+	
+	public static boolean AngelegtVonUser = false;
 	
 	public static ArrayList<ArrayList<ArrayList<String[]>>> aRoogleGruppen;
 	
@@ -136,6 +142,7 @@ public class SystemConfig {
 	public static String sReaderName = null;
 	public static String sReaderAktiv = null;
 	public static String sReaderCtApiLib = null;
+	public static String sReaderDeviceID = null;
 	public static String sDokuScanner = null;
 	public static String sBarcodeScanner = null;
 	public static String sBarcodeAktiv = null;
@@ -203,6 +210,9 @@ public class SystemConfig {
 	
 	public static String sWebCamActive = null;
 	public static int[] sWebCamSize = {320,240};
+	
+	public static HashMap<String,Object> hmArschgeigenModus = new HashMap<String,Object>();
+	public static Vector<Vector<String>> vArschgeigenDaten = new Vector<Vector<String>>();
 	                     
 	public SystemConfig(){
 	
@@ -319,17 +329,35 @@ public class SystemConfig {
 		try{
 			ini = new INIFile(Reha.proghome+"ini/"+Reha.aktIK+"/rehajava.ini");
 			//ini = new INIFile(Reha.proghome+"ini/"+Reha.aktIK+"/terminkalender.ini");
-
+			boolean mustsave = false;
 			aHauptFenster = new ArrayList<String>();
 			aHauptFenster.add(ini.getStringProperty("HauptFenster","Hintergrundbild"));
 			aHauptFenster.add(ini.getStringProperty("HauptFenster","Bildgroesse"));			
 			aHauptFenster.add(ini.getStringProperty("HauptFenster","FensterFarbeRGB"));
 			aHauptFenster.add(ini.getStringProperty("HauptFenster","FensterTitel"));
 			aHauptFenster.add(ini.getStringProperty("HauptFenster","LookAndFeel"));
+			
 			if ( ini.getStringProperty("HauptFenster", "HorizontalTeilen") != null ){
 				desktopHorizontal = ((Integer)ini.getIntegerProperty("HauptFenster", "HorizontalTeilen") == 1 ? true : false) ;
 			}else{
 				ini.setStringProperty("HauptFenster", "HorizontalTeilen","1",null);
+				mustsave = true;
+				
+			}
+			if ( ini.getStringProperty("HauptFenster", "TP1Offen") != null ){
+				for(int i = 1; i < 7; i++){
+					taskPaneCollapsed[i-1] = (ini.getStringProperty("HauptFenster", "TP"+Integer.toString(i)+"Offen").equals("1") ? true : false);
+				}
+			}else{
+				ini.setStringProperty("HauptFenster", "TP1Offen","0",null);
+				ini.setStringProperty("HauptFenster", "TP2Offen","0",null);
+				ini.setStringProperty("HauptFenster", "TP3Offen","1",null);
+				ini.setStringProperty("HauptFenster", "TP4Offen","1",null);
+				ini.setStringProperty("HauptFenster", "TP5Offen","0",null);
+				ini.setStringProperty("HauptFenster", "TP6Offen","1",null);
+				mustsave = true;
+			}
+			if(mustsave){
 				ini.save();
 			}
 
@@ -413,6 +441,14 @@ public class SystemConfig {
 			KalenderStartWADefaultUser = (ini.getStringProperty("Kalender","AnsichtDefault").split("@")[0]);
 			KalenderStartNADefaultSet = (ini.getStringProperty("Kalender","AnsichtDefault").split("@")[1]);
 			KalenderZeitLabelZeigen = (ini.getStringProperty("Kalender","ZeitLabelZeigen").trim().equals("0") ? false : true );
+			if(ini.getStringProperty("Kalender", "ZeitLinieZeigen")==null){
+				ini.setStringProperty("Kalender", "ZeitLinieZeigen", "0", null);
+				ini.save();
+				KalenderTimeLineZeigen = false;
+			}else{
+				KalenderTimeLineZeigen = (ini.getStringProperty("Kalender", "ZeitLinieZeigen").trim().equals("0") ? false : true);	
+			}
+			
 		}catch(Exception ex){
 			ex.printStackTrace();
 		}
@@ -784,7 +820,7 @@ public class SystemConfig {
 		hmAdrPDaten = new HashMap<String,String>();
 		List<String> lAdrPDaten = Arrays.asList(new String[]{"<Padr1>","<Padr2>","<Padr3>","<Padr4>","<Padr5>",
 											"<Pgeboren>","<Panrede>","<Pnname>","<Pvname>","<Pbanrede>",
-											"<Ptelp>","<Ptelg>","<Ptelmob>","<Pfax>","<Pemail>","<Ptitel>","<Pihrem>","<Pihnen>","<Pid>","<Palter>","<Pzigsten>"});
+											"<Ptelp>","<Ptelg>","<Ptelmob>","<Pfax>","<Pemail>","<Ptitel>","<Pihrem>","<Pihnen>","<Pid>","<Palter>","<Pzigsten>","<Pvnummer>"});
 		for(int i = 0; i < lAdrPDaten.size(); i++){
 			hmAdrPDaten.put(lAdrPDaten.get(i),"");
 		}
@@ -881,11 +917,21 @@ public class SystemConfig {
 		if(inif.getIntegerProperty("KartenLeser", "KartenLeserAktivieren") > 0){
 			sReaderName = inif.getStringProperty("KartenLeser", "KartenLeserName");
 			sReaderAktiv = "1";
+			boolean mustsave = false;
 			if(inif.getStringProperty("KartenLeser", "KartenLeserCTAPILib")==null){
 				inif.setStringProperty("KartenLeser", "KartenLeserCTAPILib","ctpcsc31kv",null);
+				mustsave = true;
+			}
+			if(inif.getStringProperty("KartenLeser", "KartenLeserDeviceID")==null){
+				inif.setStringProperty("KartenLeser", "KartenLeserDeviceID","0",null);
+				mustsave = true;
+			}
+			if(mustsave){
 				inif.save();
 			}
-			sReaderCtApiLib = inif.getStringProperty("KartenLeser", "KartenLeserCTAPILib");			
+
+			sReaderCtApiLib = inif.getStringProperty("KartenLeser", "KartenLeserCTAPILib");
+			sReaderDeviceID = inif.getStringProperty("KartenLeser", "KartenLeserDeviceID");
 			hmKVKDaten = new HashMap<String,String>();
 			hmKVKDaten.put("Krankekasse", "");
 			hmKVKDaten.put("Kassennummer", "");
@@ -904,6 +950,7 @@ public class SystemConfig {
 			hmKVKDaten.put("Checksumme", "");	
 			hmKVKDaten.put("Fehlercode", "");
 			hmKVKDaten.put("Fehlertext", "");
+			hmKVKDaten.put("Anrede", "");
 		}else{
 			sReaderName = "";
 			sReaderAktiv = "0";
@@ -985,8 +1032,14 @@ public class SystemConfig {
 			rezBarCodName = new String[] {null};
 			rezBarCodForm = new Vector<String>();
 		}
+		String dummy = inif.getStringProperty("Sonstiges", "AngelegtVonUser");
+		if(dummy == null){
+			inif.setStringProperty("Sonstiges", "AngelegtVonUser","0",null);
+			inif.save();
+		}else{
+			AngelegtVonUser = (inif.getStringProperty("Sonstiges", "AngelegtVonUser").equals("0") ? false : true);
+		}
 		//System.out.println(rezeptKlassenAktiv);
-
 	}
 	@SuppressWarnings("unchecked")
 	public static void TherapBausteinInit() {
@@ -1381,6 +1434,36 @@ public class SystemConfig {
 		}
 	}
 	
+	public static void ArschGeigenTest(){
+		//public static HashMap<String,Object> hmArschgeigenModus = new HashMap<String,Object>();
+		//public static Vector<Vector<String>> vArschgeigenDaten = new Vector<Vector<String>>();
+		if(new File(Reha.proghome+"ini/"+Reha.aktIK+"/arschgeigen.ini").exists()){
+			INIFile inif = new INIFile(Reha.proghome+"ini/"+Reha.aktIK+"/arschgeigen.ini");
+			int anzahlag = inif.getIntegerProperty("Arschgeigen", "AnzahlArschgeigen");
+			int anzahliks;
+			Vector<String> vDummy = new Vector<String>();
+			for(int i = 0; i < anzahlag;i++){
+				vDummy.clear();
+				anzahliks = inif.getIntegerProperty("Arschgeigen"+Integer.toString(i+1), "ArschgeigenAnzahl");
+				for(int i2 = 0 ; i2 < anzahliks; i2++){
+					vDummy.add(inif.getStringProperty("Arschgeigen"+Integer.toString(i+1), "ArschgeigenIK"+Integer.toString(i2+1)));
+				}
+				/*
+				ArschgeigenModus=4
+				ArschgeigenStichtag=01.01.2012
+				ArschgeigenTarifgruppeAlt = 8
+				ArschgeigenTarifgruppeNeu = 2
+				*/
+				vArschgeigenDaten.add((Vector<String>)vDummy.clone());
+				hmArschgeigenModus.put("Modus"+Integer.toString(i),(Integer) inif.getIntegerProperty("Arschgeigen"+Integer.toString(i+1), "ArschgeigenModus") );
+				hmArschgeigenModus.put("Stichtag"+Integer.toString(i),(String) inif.getStringProperty("Arschgeigen"+Integer.toString(i+1), "ArschgeigenStichtag") );
+				hmArschgeigenModus.put("Tarifalt"+Integer.toString(i),(Integer) inif.getIntegerProperty("Arschgeigen"+Integer.toString(i+1), "ArschgeigenTarifgruppeAlt")-1 );
+				hmArschgeigenModus.put("Tarifneu"+Integer.toString(i),(Integer) inif.getIntegerProperty("Arschgeigen"+Integer.toString(i+1), "ArschgeigenTarifgruppeNeu")-1 );
+			}
+			
+		}
+	}
+	
 	public static void SystemIconsInit(){
 		String[] bilder = {"neu","edit","delete","print","save","find","stop","zuzahlfrei","zuzahlok","zuzahlnichtok",
 				"nichtgesperrt","rezeptgebuehr","ausfallrechnung","arztbericht","privatrechnung",
@@ -1391,7 +1474,8 @@ public class SystemConfig {
 				"forward","wecker16","mond","roogle","scannergross","rot","gruen","inaktiv","buttonrot","buttongruen",
 				"statusoffen","statuszu","statusset","abschliessen","bombe","openoffice26","tporgklein","information","undo","redo",
 				"abrdreizwei","abriv","att","close","confirm","copy","cut","day","dayselect","down","left","minimize","paste","patsearch",
-				"quicksearch","refresh","right","search","tellist","termin","upw","week","abrdreieins","ebcheck","hbmehrere"};
+				"quicksearch","refresh","right","search","tellist","termin","upw","week","abrdreieins","ebcheck","hbmehrere","verkaufArtikel",
+				"verkaufLieferant", "verkaufTuten"};
 		INIFile inif = new INIFile(Reha.proghome+"ini/"+Reha.aktIK+"/icons.ini");
 		hmSysIcons = new HashMap<String,ImageIcon>();
 		Image ico = null;

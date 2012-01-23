@@ -177,6 +177,10 @@ public class Dokumentation extends JXPanel implements ActionListener, TableModel
 	public String aktion  = "";
 	public String quelle = "";
 	public String nameOOorgDokuNeu;
+	public ImageIcon pdfplus;
+	public ImageIcon oowriterplus;
+	public ImageIcon oocalcplus;
+
 	//public JRtaTextField annika = null;
 	Scanner scanner;
 	public Dokumentation(){
@@ -250,6 +254,13 @@ public class Dokumentation extends JXPanel implements ActionListener, TableModel
 							scanStarten();
 						}
 						setzeListener();
+						Image ico = SystemConfig.hmSysIcons.get("pdf").getImage().getScaledInstance(26,26, Image.SCALE_SMOOTH);
+						pdfplus = new ImageIcon(ico);
+						ico = SystemConfig.hmSysIcons.get("ooowriter").getImage().getScaledInstance(26,26, Image.SCALE_SMOOTH);
+						oowriterplus = new ImageIcon(ico);
+						ico = SystemConfig.hmSysIcons.get("ooocalc").getImage().getScaledInstance(26,26, Image.SCALE_SMOOTH);
+						oocalcplus = new ImageIcon(ico);
+						
 						return null;
 					}
 				}.execute();
@@ -2223,6 +2234,32 @@ public class Dokumentation extends JXPanel implements ActionListener, TableModel
 		
 	}
 /**************************************************/
+	private void pdfSpeichernDoku(){
+		int dokuid = -1;
+		String[] doku = oeffneBild(new String[] {"pdf","????","???"},false);
+		if(doku.length==0){setCursor(Reha.thisClass.normalCursor);return;}
+		if(! doku[0].toLowerCase().endsWith(".pdf")){
+			setCursor(Reha.thisClass.normalCursor);
+			JOptionPane.showMessageDialog(null,"Diese Funktion ist nur für PDF-Dateien geeignet");
+			return;
+		}
+		doku[1] = doku[1].replaceAll("\\\\", "/");
+		try {
+			doSpeichernDoku( (dokuid=SqlInfo.erzeugeNummer("doku")),
+					Integer.valueOf(Reha.thisClass.patpanel.aktPatID), 
+					doku[1],
+					0,
+					new String[] {DatFunk.sDatInSQL(DatFunk.sHeute()),doku[0],Reha.aktUser,""},
+					true);
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		this.holeDokus(Reha.thisClass.patpanel.aktPatID,Integer.toString(dokuid));
+		setCursor(Reha.thisClass.normalCursor);
+	}
+/**************************************************/
 	public void speichernOoDocs(int dokuid,int pat_intern, String dateiname,int format,String[] str,boolean neu) throws Exception{
 		Statement stmt = null;;
 		ResultSet rs = null;
@@ -2341,19 +2378,22 @@ public class Dokumentation extends JXPanel implements ActionListener, TableModel
 			Map<Object, ImageIcon> icons = new HashMap<Object, ImageIcon>();
 			icons.put("Scanner einstellungen",SystemConfig.hmSysIcons.get("scanner"));
 			icons.put("Photo von DigiCam holen",SystemConfig.hmSysIcons.get("camera"));
-			icons.put("Office-Dokument aufnehmen",SystemConfig.hmSysIcons.get("openoffice26"));
-			icons.put("Neue OO-Writer-Doku erstellen",SystemConfig.hmSysIcons.get("ooowriter"));
-			icons.put("Neue OO-Calc-Doku erstellen",SystemConfig.hmSysIcons.get("ooocalc"));
+			icons.put("Office-Dokument aufnehmen", SystemConfig.hmSysIcons.get("openoffice26"));
+			icons.put("PDF-Dokument aufnehmen", pdfplus /*SystemConfig.hmSysIcons.get("pdf")*/);
+			icons.put("Neue OO-Writer-Doku erstellen",oowriterplus/*SystemConfig.hmSysIcons.get("ooowriter")*/);
+			icons.put("Neue OO-Calc-Doku erstellen",oocalcplus/*SystemConfig.hmSysIcons.get("ooocalc")*/);
+
 			// create a list with some test data
 			JList list = new JList(	new Object[] {"Scanner einstellungen",
 					"Photo von DigiCam holen", 
 					"Office-Dokument aufnehmen",
+					"PDF-Dokument aufnehmen",
 					"Neue OO-Writer-Doku erstellen",
 					"Neue OO-Calc-Doku erstellen"});
 			list.setCellRenderer(new IconListRenderer(icons));	
 			Reha.toolsDlgRueckgabe = -1;
 			ToolsDialog tDlg = new ToolsDialog(Reha.thisFrame,"Werkzeuge: Dokumentation",list);
-			tDlg.setPreferredSize(new Dimension(200,200+
+			tDlg.setPreferredSize(new Dimension(220,220+
 					((Boolean)SystemConfig.hmPatientenWerkzeugDlgIni.get("ToolsDlgShowButton")? 25 : 0) ));
 			tDlg.setLocation(pt.x-70,pt.y+30);
 			tDlg.pack();
@@ -2389,7 +2429,7 @@ public class Dokumentation extends JXPanel implements ActionListener, TableModel
 				}
 				doHoleOO();
 				break;
-			case 3:
+			case 4:
 				if(Reha.thisClass.patpanel.aktPatID.equals("")){
 					keinAtiverPatient();
 					tDlg = null;
@@ -2400,7 +2440,7 @@ public class Dokumentation extends JXPanel implements ActionListener, TableModel
 				}
 				oooDokuNeu(0);
 				break;
-			case 4:
+			case 5:
 				if(Reha.thisClass.patpanel.aktPatID.equals("")){
 					keinAtiverPatient();
 					tDlg = null;
@@ -2410,6 +2450,17 @@ public class Dokumentation extends JXPanel implements ActionListener, TableModel
 					return;
 				}
 				oooDokuNeu(1);
+				break;
+			case 3:
+				if(Reha.thisClass.patpanel.aktPatID.equals("")){
+					keinAtiverPatient();
+					tDlg = null;
+					return;
+				}// 0 = Calc
+				if(!Rechte.hatRecht(Rechte.Doku_ooorg, true)){
+					return;
+				}
+				pdfSpeichernDoku();
 				break;
 			}
 			tDlg = null;

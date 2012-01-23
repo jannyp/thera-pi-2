@@ -67,7 +67,7 @@ public class JVerkaufInternal extends JRehaInternal implements RehaEventListener
 	@Override
 	public void rehaEventOccurred(RehaEvent evt) {
 		if(evt.getRehaEvent().equals("REHAINTERNAL")){
-			//System.out.println("es ist ein Reha-Internal-Event");
+
 		}
 		if(evt.getDetails()[0].equals(this.getName())){
 			if(evt.getDetails()[1].equals("#ICONIFIED")){
@@ -77,7 +77,11 @@ public class JVerkaufInternal extends JRehaInternal implements RehaEventListener
 					e.printStackTrace();
 				}
 				this.setActive(false);
+			}else if(evt.getDetails()[1].equals("#FRAMESCHLIESSEN")){
+				Reha.thisClass.verkaufpanel.removeListeners();
+
 			}
+
 		}
 		
 	}

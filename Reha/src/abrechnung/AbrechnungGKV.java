@@ -175,6 +175,7 @@ public class AbrechnungGKV extends JXPanel implements PatStammEventListener,Acti
 		jSplitLR.setOneTouchExpandable(true);
 		jSplitLR.setDividerLocation(230);
 		add(jSplitLR,BorderLayout.CENTER);
+		mandantenCheck();
 		
 	}
 	/**********
@@ -183,6 +184,27 @@ public class AbrechnungGKV extends JXPanel implements PatStammEventListener,Acti
 	 * 
 	 * Linke Seite
 	 */
+	private void mandantenCheck(){
+		if(SystemConfig.hmFirmenDaten.get("Steuernummer").trim().equals("")){
+			String msg = "Achtung(!!!!!!) für diesen Mandant wurde keine Steuernummer angegeben!\n\n"+
+			"Eine Abrechnung ohne Steuernummer wird von der GKV nicht(!!!!) akzeptiert\n\"+" +
+			"Schließen Sie die Abrechnung starten Sie die System-Initialisierung -> Mandanten Datenbank -> Firmenangaben...\n"+
+			"und tragen Sie hier im Feld Steuernummer die vom Finanzamt vergebene Steuernummer ein.";
+			JOptionPane.showMessageDialog(null,msg);
+		}
+		if(SystemConfig.hmFirmenDaten.get("Ikbezeichnung").trim().equals("")){
+			String msg = "Achtung(!!!!!!) für diesen Mandant wurde keine Firmenbezeichnung angegeben!\n\n"+
+			"Schließen Sie die Abrechnung starten Sie die System-Initialisierung -> Mandanten Datenbank -> Firmenangaben...\n"+
+			"und tragen Sie hier im Feld 'Mandanten-Bezeichnung' eine Kurzfassung Ihres Firmennamens ein (max 30 Zeichen)";
+			JOptionPane.showMessageDialog(null,msg);
+		}
+		if(SystemConfig.hmFirmenDaten.get("Ikbezeichnung").length() > 30){
+			String msg = "Achtung(!!!!!!) für diesen Mandant wurde eine zu lange Firmenbezeichnung angegeben.\n\n"+
+			"Schließen Sie die Abrechnung starten Sie die System-Initialisierung -> Mandanten Datenbank -> Firmenangaben...\n"+
+			"und tragen Sie hier im Feld 'Mandanten-Bezeichnung' eine Kurzfassung Ihres Firmennamens ein (max 30 Zeichen)";
+			JOptionPane.showMessageDialog(null,msg);
+		}
+	}
 	private JScrollPane getLeft(){
 		FormLayout lay = new FormLayout("5dlu,fill:0:grow(1.0),5dlu",
 				//1   2  3   4  5    6  7    8  9      10             11
@@ -422,9 +444,9 @@ public class AbrechnungGKV extends JXPanel implements PatStammEventListener,Acti
 
 				String name = SqlInfo.holeFelder(cmd).get(0).get(0);
 				cmd = "select preisgruppe from verordn where rez_nr='"+vecKassen.get(i).get(0)+"' LIMIT 1";;
-				//System.out.println(cmd);
+				////System.out.println(cmd);
 				String preisgr = SqlInfo.holeEinzelFeld(cmd); 
-				//System.out.println("Preisgruppe="+preisgr);
+				////System.out.println("Preisgruppe="+preisgr);
 
 				KnotenObjekt rezeptknoten = new KnotenObjekt(vecKassen.get(i).get(0)+"-"+name,
 						vecKassen.get(i).get(0),
@@ -478,7 +500,7 @@ public class AbrechnungGKV extends JXPanel implements PatStammEventListener,Acti
 			}catch(Exception ex){
 				ex.printStackTrace();
 			}
-			//System.out.println("Rezept "+node.rez_num+" fertig eingestellt");
+			////System.out.println("Rezept "+node.rez_num+" fertig eingestellt");
 			setCursor(Reha.thisClass.normalCursor);
 			SwingUtilities.invokeLater(new Runnable(){
 				public void run(){
@@ -540,14 +562,14 @@ public class AbrechnungGKV extends JXPanel implements PatStammEventListener,Acti
     		aktuellerKassenKnoten =(JXTTreeNode) ((JXTTreeNode)aktuellerKnoten).getParent();
     		int pgr = -1;
     		if(! ((JXTTreeNode)node).knotenObjekt.preisgruppe.trim().equals("")){
-    			//System.out.println("Aktuelle Disziplin = "+getDiszis()+" / Aktuelle Preisgruppe = "+pgr);
+    			////System.out.println("Aktuelle Disziplin = "+getDiszis()+" / Aktuelle Preisgruppe = "+pgr);
     			pgr = Integer.parseInt(((JXTTreeNode)node).knotenObjekt.preisgruppe.trim());
     			zuzahlModusDefault = (SystemPreislisten.hmZuzahlModus.get(getDiszis()).get(pgr-1)==1 ? true : false);
     		}
     		if(pgr < 0){
     			JOptionPane.showMessageDialog(null,"Achtung Preisgruppe kann nicht ermittelt werden!\nBitte dieses Rezept nicht abrechnen!");
     		}
-    		//System.out.println("Preisguppe = "+Integer.toString(pgr)+"\nZuhahlmodus = "+(zuzahlModusDefault ? "Normal" : "Bayrisch"));
+    		////System.out.println("Preisguppe = "+Integer.toString(pgr)+"\nZuhahlmodus = "+(zuzahlModusDefault ? "Normal" : "Bayrisch"));
 
     	}else{
     		abrRez.setRechtsAufNull();
@@ -555,11 +577,11 @@ public class AbrechnungGKV extends JXPanel implements PatStammEventListener,Acti
     		if(aktuellerKnoten.getParent() != null){
     			if(((JXTTreeNode)aktuellerKnoten.getParent()).isRoot()){
     	    		aktuellerKassenKnoten =(JXTTreeNode) ((JXTTreeNode)aktuellerKnoten);
-    	    		////System.out.println("Aktueller Knoten ist Root");
+    	    		//////System.out.println("Aktueller Knoten ist Root");
     			}else{
-    				////System.out.println("Aktueller Knoten ungleich Root");
+    				//////System.out.println("Aktueller Knoten ungleich Root");
     			}
-        		////System.out.println("Pfad zu Parent = "+new TreePath(aktuellerKnoten.getParent()).toString());    			
+        		//////System.out.println("Pfad zu Parent = "+new TreePath(aktuellerKnoten.getParent()).toString());    			
     		}else{
     			aktuellerKassenKnoten = null;
     		}
@@ -581,7 +603,7 @@ public class AbrechnungGKV extends JXPanel implements PatStammEventListener,Acti
     	}	
 	}
 	public String getAbrechnungKasse(){
-		//System.out.println(((JXTTreeNode)aktuellerKnoten).knotenObjekt.ktraeger);
+		////System.out.println(((JXTTreeNode)aktuellerKnoten).knotenObjekt.ktraeger);
 		return ((JXTTreeNode)aktuellerKnoten).knotenObjekt.ktraeger;
 	}
 	public void rechneKasse(JXTTreeNode aktKasse){
@@ -651,7 +673,7 @@ public class AbrechnungGKV extends JXPanel implements PatStammEventListener,Acti
 		if(buf.length()<=0){
 			JOptionPane.showMessageDialog(null,"Kassenumsatz für Rezept + "+rez_nr+" kann nicht abgeholt werden. Modul holeUmsatz() (Edifact)");
 		}
-		////System.out.println(buf.toString());
+		//////System.out.println(buf.toString());
 		String[] zeilen = buf.toString().split("\n");
 		String[] positionen = zeilen[0].split(":");
 		//PG=1:PATINTERN=16961:REZNUM=KG57747:GESAMT=102,30:REZGEB=20,26:REZANTEIL=10,26:REZPAUSCHL=10,00:KASSENID=116
@@ -733,7 +755,7 @@ public class AbrechnungGKV extends JXPanel implements PatStammEventListener,Acti
 		String cmd = "select ik_kasse,ik_kostent,ik_nutzer,ik_physika,ik_papier,"+preisgr+" from kass_adr where ik_kasse='"+abzurechnendeKassenID+"' LIMIT 1";
 		kassenIKs.clear();
 		kassenIKs = SqlInfo.holeFelder(cmd);
-		//System.out.println(cmd);
+		////System.out.println(cmd);
 		if(kassenIKs.size()<=0){
 			Reha.thisClass.progressStarten(false);
 			abrDlg.setVisible(false);
@@ -756,11 +778,11 @@ public class AbrechnungGKV extends JXPanel implements PatStammEventListener,Acti
 		ik_papier = kassenIKs.get(0).get(4);
 		ik_email = SqlInfo.holeEinzelFeld("select email from ktraeger where ikkasse='"+ik_physika+"' LIMIT 1");
 		/*
-		System.out.println("  kasse = "+ik_kasse);
-		System.out.println("kostent = "+ik_kostent);
-		System.out.println(" nutzer = "+ik_nutzer);
-		System.out.println("physika = "+ik_physika);
-		System.out.println("  email = "+ik_email);
+		//System.out.println("  kasse = "+ik_kasse);
+		//System.out.println("kostent = "+ik_kostent);
+		//System.out.println(" nutzer = "+ik_nutzer);
+		//System.out.println("physika = "+ik_physika);
+		//System.out.println("  email = "+ik_email);
 		*/
 
 		if(abrechnungsModus.equals(ABR_MODE_302)){
@@ -1026,7 +1048,7 @@ public class AbrechnungGKV extends JXPanel implements PatStammEventListener,Acti
 	}
 	private void doEmail(){
 		try{
-			//System.out.println("Erstelle Emailparameter.....");	
+			////System.out.println("Erstelle Emailparameter.....");	
 			String smtphost = SystemConfig.hmEmailExtern.get("SmtpHost");
 			//String pophost = SystemConfig.hmEmailExtern.get("Pop3Host");
 			String authent = SystemConfig.hmEmailExtern.get("SmtpAuth");
@@ -1047,10 +1069,10 @@ public class AbrechnungGKV extends JXPanel implements PatStammEventListener,Acti
 			attachments.add(aufDat);
 			EmailSendenExtern oMail = new EmailSendenExtern();
 			try{
-				//System.out.println("Starte Emailversand.....");
+				////System.out.println("Starte Emailversand.....");
 				oMail.sendMail(smtphost, benutzer, pass1, sender, recipient, Reha.aktIK, text,attachments,authx,bestaetigen);
 				oMail = null;
-				//System.out.println("Emailversand beendet.....");
+				////System.out.println("Emailversand beendet.....");
 				
 			}catch(Exception e){
 				e.printStackTrace( );
@@ -1071,7 +1093,7 @@ public class AbrechnungGKV extends JXPanel implements PatStammEventListener,Acti
 			for(int i = (lang-1); i >= 0;i--){
 				node = (JXTTreeNode) aktuellerKassenKnoten.getChildAt(i);
 				if(node.knotenObjekt.fertig){
-					////System.out.println("Lösche KindKnoten an "+i);
+					//////System.out.println("Lösche KindKnoten an "+i);
 					//aktuellerKassenKnoten.remove(node);
 					treeModelKasse.removeNodeFromParent(node);
 				}
@@ -1096,7 +1118,7 @@ public class AbrechnungGKV extends JXPanel implements PatStammEventListener,Acti
 		}
 
 		Vector<String> feldNamen = SqlInfo.holeFeldNamen("verordn",true,Arrays.asList(new String[] {"id"}) );
-		//System.out.println(feldNamen);
+		////System.out.println(feldNamen);
 		
 		rechnungBuf.setLength(0);
 		rechnungBuf.trimToSize();
@@ -1130,8 +1152,8 @@ public class AbrechnungGKV extends JXPanel implements PatStammEventListener,Acti
 					}
 				}
 			}
-			////System.out.println(historieBuf.toString());
-			////System.out.println("Übertrage Rezept "+abgerechneteRezepte.get(i2)+" in Langzeitarchiv = Historie");
+			//////System.out.println(historieBuf.toString());
+			//////System.out.println("Übertrage Rezept "+abgerechneteRezepte.get(i2)+" in Langzeitarchiv = Historie");
 
 			SqlInfo.sqlAusfuehren(historieBuf.toString());
 
@@ -1283,7 +1305,7 @@ public class AbrechnungGKV extends JXPanel implements PatStammEventListener,Acti
 				return null;
 			}
 		}.execute();
-		////System.out.println(aktEsol + "  - "+aktDfue);
+		//////System.out.println(aktEsol + "  - "+aktDfue);
 		unbBuf.append("UNB+UNOC:3+"+Reha.aktIK+plus+ik_nutzer+plus);
 		unbBuf.append(getEdiDatumFromDeutsch(DatFunk.sHeute())+":"+getEdiTimeString(false)+plus);
 		unbBuf.append(aktDfue+plus+"B"+plus);
@@ -1337,7 +1359,7 @@ public class AbrechnungGKV extends JXPanel implements PatStammEventListener,Acti
 		String cmd = "select ik_kasse,ik_kostent,ik_nutzer,ik_physika,ik_papier,"+preisgr+" from kass_adr where ik_kasse='"+abzurechnendeKassenID+"' LIMIT 1";
 		kassenIKs.clear();
 		kassenIKs = SqlInfo.holeFelder(cmd);
-		//System.out.println(cmd);
+		////System.out.println(cmd);
 		if(kassenIKs.size()<=0){
 			Reha.thisClass.progressStarten(false);
 			abrDlg.setVisible(false);
@@ -1420,9 +1442,9 @@ public class AbrechnungGKV extends JXPanel implements PatStammEventListener,Acti
 	private String getEdiTimeString(boolean mitsekunden){
 		Date date = new Date();
 		String[] datesplit = date.toString().split(" ");
-		////System.out.println(date.toString());
+		//////System.out.println(date.toString());
 		if(mitsekunden){
-			////System.out.println("Zeit mit Sekunden"+datesplit[3].substring(0,2)+datesplit[3].substring(3,5)+datesplit[3].substring(6,8));
+			//////System.out.println("Zeit mit Sekunden"+datesplit[3].substring(0,2)+datesplit[3].substring(3,5)+datesplit[3].substring(6,8));
 			return datesplit[3].substring(0,2)+datesplit[3].substring(3,5)+datesplit[3].substring(6,8);
 		}
 		return datesplit[3].substring(0,2)+datesplit[3].substring(3,5);
@@ -1489,15 +1511,15 @@ public class AbrechnungGKV extends JXPanel implements PatStammEventListener,Acti
 		if(abgerechneteRezepte.size() > 0){
 			/**************Hier den offenen Posten anlegen***************/
 			abrDlg.setzeLabel("Offene Posten anlegen für Rechnung Nr.: "+aktRechnung );
-			//System.out.println("  abgerechnete Rezepte = "+abgerechneteRezepte);
-			//System.out.println("abgerechnete Patienten = "+abgerechnetePatienten);
-			//System.out.println("abger. Bruttovolumen   = "+preis00[1]);
-			//System.out.println("  abger. Rezeptanteil  = "+preis00[2]);
-			//System.out.println("  abger. Nettovolumen  = "+preis00[0]);
-			//System.out.println("Name der abger. Kasse  = "+name_kostent);
-			//System.out.println("       IK-Kostenträger = "+ik_kostent);
-			//System.out.println("             Disziplin = "+diszis[cmbDiszi.getSelectedIndex()]);
-			//System.out.println("          Rechnung Nr. = "+aktRechnung);
+			////System.out.println("  abgerechnete Rezepte = "+abgerechneteRezepte);
+			////System.out.println("abgerechnete Patienten = "+abgerechnetePatienten);
+			////System.out.println("abger. Bruttovolumen   = "+preis00[1]);
+			////System.out.println("  abger. Rezeptanteil  = "+preis00[2]);
+			////System.out.println("  abger. Nettovolumen  = "+preis00[0]);
+			////System.out.println("Name der abger. Kasse  = "+name_kostent);
+			////System.out.println("       IK-Kostenträger = "+ik_kostent);
+			////System.out.println("             Disziplin = "+diszis[cmbDiszi.getSelectedIndex()]);
+			////System.out.println("          Rechnung Nr. = "+aktRechnung);
 			if(Reha.vollbetrieb){
 				anlegenOP();				
 			}
@@ -1526,7 +1548,7 @@ public class AbrechnungGKV extends JXPanel implements PatStammEventListener,Acti
 	/***************************************************************/
 	
 	private void analysierenEdifact(String edifact,String rez_num){
-		////System.out.println(edifact);
+		//////System.out.println(edifact);
 		Vector<String> position = new Vector<String>();
 		Vector<BigDecimal>anzahl = new Vector<BigDecimal>();
 		Vector<BigDecimal>preis = new Vector<BigDecimal>();
@@ -1560,6 +1582,10 @@ public class AbrechnungGKV extends JXPanel implements PatStammEventListener,Acti
 							rezgeb.add(BigDecimal.valueOf(Double.valueOf(dummy)));
 							einzelzuzahlung.add(BigDecimal.valueOf(Double.valueOf(dummy)));
 						}else{
+							/*
+							System.out.println("Dummy = "+dummy);
+							System.out.println("Muliplikator = "+bdAnzahl);
+							*/
 							//Herr Lehmann: nächste Zeile muß freigeschaltet werden für Einzelkilometer
 							rezgeb.add(BigDecimal.valueOf(Double.valueOf(dummy)).multiply(bdAnzahl));
 							//Herr Lehmann: nächste Zeile muß freigeschaltet werden für Einzelkilometer
@@ -1593,18 +1619,32 @@ public class AbrechnungGKV extends JXPanel implements PatStammEventListener,Acti
 							}
 						}else{
 							//Herr Lehmann: nächste Zeile muß freigeschaltet werden für Einzelkilometer
-							rezgeb.set(pos,rezgeb.get(pos).add(BigDecimal.valueOf(Double.valueOf(dummy)).multiply(anzahl.get(pos))));
+							/*
+							System.out.println("Dummy = "+dummy);
+							System.out.println("Muliplikator (falsch) = "+anzahl.get(pos));
+							System.out.println("Muliplikator (richtig) = "+bdAnzahl);
+							*/
+							rezgeb.set(pos,rezgeb.get(pos).add(BigDecimal.valueOf(Double.valueOf(dummy)).multiply(bdAnzahl)));
 							//Herr Lehmann: nächste Zeile muß freigeschaltet werden für Einzelkilometer
 							if(! BigDecimal.valueOf(Double.valueOf(dummy)).multiply(bdAnzahl).equals(einzelzuzahlung.get(pos))){
 								zuzahlUmstellung = true;
 							}
+							/*
+							rezgeb.set(pos,rezgeb.get(pos).add(BigDecimal.valueOf(Double.valueOf(dummy)).multiply(anzahl.get(pos))));
+							if(! BigDecimal.valueOf(Double.valueOf(dummy)).multiply(bdAnzahl).equals(einzelzuzahlung.get(pos))){
+								zuzahlUmstellung = true;
+							}
+							*/
 						}
 					}else{
+						//System.out.println("Keine Zuzahlung Dummy = ");
+						//System.out.println("Keine Zuzahlung Muliplikator = "+anzahl.get(pos));
 						rezgeb.set(pos,rezgeb.get(pos).add(BigDecimal.valueOf(Double.valueOf("0.00"))));
 						if(!BigDecimal.valueOf(Double.valueOf("0.00")).equals(einzelzuzahlung.get(pos))){
-							////System.out.println("Einzelzuzahlung = "+einzelzuzahlung.get(pos));
-							////System.out.println("Vergleichswert = 0.00 ");
-							zuzahlUmstellung = true;							
+							//////System.out.println("Einzelzuzahlung = "+einzelzuzahlung.get(pos));
+							//////System.out.println("Vergleichswert = 0.00 ");
+							zuzahlUmstellung = true;
+							//System.out.println("Umstellung der Zuzahlung = "+zuzahlUmstellung);
 						}
 					}
 				}
@@ -1633,23 +1673,23 @@ public class AbrechnungGKV extends JXPanel implements PatStammEventListener,Acti
 						(splits[6].split("=")[1].equals("10,00") ? true : false));
 			}
 			/*
-			//System.out.println("         Rezept Nr. ="+abrechnungRezepte+" ********Abrechnungsposition Anfang********");
-			//System.out.println("               Name = "+splits[9].split("=")[1]);
-			//System.out.println("             Status = "+splits[10].split("=")[1]);
-			//System.out.println("          RezeptNr. = "+splits[2].split("=")[1]);
-			//System.out.println("  Positionen Vector = "+position);
-			//System.out.println("      Anzahl Vector = "+anzahl);
-			//System.out.println("    Abr.tage Vector = "+abrtage);			
-			//System.out.println(" Einzelpreis Vector = "+einzelpreis);
-			//System.out.println(" Kummulierte Preise = "+preis);
-			//System.out.println(" Kummulierte Zuzahl.= "+rezgeb);
-			//System.out.println(" Zuzahlungen einzel = "+einzelzuzahlung);
-			//System.out.println("      mit Pauschale = "+(splits[6].split("=")[1].equals("10,00") ? true : false));
-			//System.out.println("mit Preisumstellung = "+preisUmstellung);
-			//System.out.println("  mit Zuzahlwechsel = "+zuzahlUmstellung);
-			//System.out.println("bislang abgerechnet = "+abgerechneteRezepte);
-			//System.out.println("   Rechnungsadresse = "+hmAnnahme);
-			//System.out.println("Rezept Nr. ="+abrechnungRezepte+" ********Abrechnungsposition Ende********");
+			////System.out.println("         Rezept Nr. ="+abrechnungRezepte+" ********Abrechnungsposition Anfang********");
+			////System.out.println("               Name = "+splits[9].split("=")[1]);
+			////System.out.println("             Status = "+splits[10].split("=")[1]);
+			////System.out.println("          RezeptNr. = "+splits[2].split("=")[1]);
+			////System.out.println("  Positionen Vector = "+position);
+			////System.out.println("      Anzahl Vector = "+anzahl);
+			////System.out.println("    Abr.tage Vector = "+abrtage);			
+			////System.out.println(" Einzelpreis Vector = "+einzelpreis);
+			////System.out.println(" Kummulierte Preise = "+preis);
+			////System.out.println(" Kummulierte Zuzahl.= "+rezgeb);
+			////System.out.println(" Zuzahlungen einzel = "+einzelzuzahlung);
+			////System.out.println("      mit Pauschale = "+(splits[6].split("=")[1].equals("10,00") ? true : false));
+			////System.out.println("mit Preisumstellung = "+preisUmstellung);
+			////System.out.println("  mit Zuzahlwechsel = "+zuzahlUmstellung);
+			////System.out.println("bislang abgerechnet = "+abgerechneteRezepte);
+			////System.out.println("   Rechnungsadresse = "+hmAnnahme);
+			////System.out.println("Rezept Nr. ="+abrechnungRezepte+" ********Abrechnungsposition Ende********");
 			*/
 			/////////////////Hier die Sätze in der Rechnungsdatei anlegen///////////////
 			if(Reha.vollbetrieb){
@@ -1794,7 +1834,7 @@ public class AbrechnungGKV extends JXPanel implements PatStammEventListener,Acti
     	TreePath path = treeKasse.getSelectionPath();
     	return	(path.getPathCount()>=3);
 	}
-	private String getAktKTraeger(){
+	String getAktKTraeger(){
 		TreePath path = treeKasse.getSelectionPath();
 		JXTTreeNode node = (JXTTreeNode) path.getLastPathComponent();
 		return ((KnotenObjekt)node.getUserObject()).ikkasse;

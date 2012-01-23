@@ -268,6 +268,15 @@ public class RezTools {
 		boolean[] bret = {false,false};
 		Vector<Vector<String>> vec = SqlInfo.holeFelder("select vorrangig,extraok from kuerzel where kuerzel='"+kuerzel+
 				"' and disziplin ='"+xreznr.substring(0,2)+"' LIMIT 1");
+		if(vec.size() <= 0){
+			String msg = "Achtung!\n\n"+
+			"Ihre Kürzelzuordnung in den Preislisten ist nicht korrekt!!!!!\n"+
+			"Kürzel: "+kuerzel+"\n"+
+			"Disziplin: "+xreznr.substring(0,2)+"\n\n"+
+			"Für die ausgewählte Diziplin ist das angegebene Kürzel nicht in der Kürzeltabelle vermerkt!";
+			JOptionPane.showMessageDialog(null, msg);
+			return null;
+		}
 		bret[0] = vec.get(0).get(0).equals("T");
 		bret[1] = vec.get(0).get(1).equals("T");
 		return bret;
@@ -967,6 +976,58 @@ public class RezTools {
 		// Ebenso das Wegegeldhandling
 	}
 	
+
+	public static void constructRawHMap(){
+		new SwingWorker<Void,Void>(){
+			@Override
+			protected Void doInBackground() throws Exception {
+				try{
+					DecimalFormat df = new DecimalFormat( "0.00" );
+					String diszi = RezTools.putRezNrGetDisziplin((String)Reha.thisClass.patpanel.vecaktrez.get(1));
+
+					int pg = Integer.parseInt((String)Reha.thisClass.patpanel.vecaktrez.get(41))-1;
+					String id = "";
+					SystemConfig.hmAdrRDaten.put("<Rid>",(String)Reha.thisClass.patpanel.vecaktrez.get(35) );
+					SystemConfig.hmAdrRDaten.put("<Rnummer>",(String)Reha.thisClass.patpanel.vecaktrez.get(1) );
+					SystemConfig.hmAdrRDaten.put("<Rdatum>",DatFunk.sDatInDeutsch((String)Reha.thisClass.patpanel.vecaktrez.get(2)) );
+
+					for(int i = 0;i<4;i++){
+						id = (String)Reha.thisClass.patpanel.vecaktrez.get(8+i);
+						SystemConfig.hmAdrRDaten.put("<Rposition"+(i+1)+">",(String)Reha.thisClass.patpanel.vecaktrez.get(48+i));
+						SystemConfig.hmAdrRDaten.put("<Rpreis"+(i+1)+">", (String)Reha.thisClass.patpanel.vecaktrez.get(18+i).replace(".",",") );
+						SystemConfig.hmAdrRDaten.put("<Ranzahl"+(i+1)+">", (String)Reha.thisClass.patpanel.vecaktrez.get(3+i) );
+						SystemConfig.hmAdrRDaten.put("<Rgesamt"+(i+1)+">", df.format( ((BigDecimal)BigDecimal.valueOf(Double.valueOf(SystemConfig.hmAdrRDaten.get("<Ranzahl"+(i+1)+">"))).multiply(BigDecimal.valueOf(Double.valueOf(SystemConfig.hmAdrRDaten.get("<Rpreis"+(i+1)+">").replace(",","."))))).doubleValue() ));
+						if(!id.equals("0")){
+							SystemConfig.hmAdrRDaten.put("<Rkuerzel"+(i+1)+">", RezTools.getKurzformFromID(id, SystemPreislisten.hmPreise.get(diszi).get(pg) ) );
+							SystemConfig.hmAdrRDaten.put("<Rlangtext"+(i+1)+">", RezTools.getLangtextFromID(id, "", SystemPreislisten.hmPreise.get(diszi).get(pg) ) );
+						}else{
+							SystemConfig.hmAdrRDaten.put("<Rkuerzel"+(i+1)+">", "");
+							SystemConfig.hmAdrRDaten.put("<Rlangtext"+(i+1)+">", "");
+						}
+					}
+					//Hausbesuche
+					if( ((String)Reha.thisClass.patpanel.vecaktrez.get(43)).equals("T") ){
+						SystemConfig.hmAdrRDaten.put("<Rhbpos>", SystemPreislisten.hmHBRegeln.get(diszi).get(pg).get(0));
+						SystemConfig.hmAdrRDaten.put("<Rhbanzahl>",(String)Reha.thisClass.patpanel.vecaktrez.get(64) );
+						SystemConfig.hmAdrRDaten.put("<Rhbpreis>",RezTools.getPreisAktFromPos(SystemConfig.hmAdrRDaten.get("<Rhbpos>"), "", SystemPreislisten.hmPreise.get(diszi).get(pg)).replace(".",",") );
+						SystemConfig.hmAdrRDaten.put("<Rwegpos>", SystemPreislisten.hmHBRegeln.get(diszi).get(pg).get(2));
+						SystemConfig.hmAdrRDaten.put("<Rweganzahl>",(String)Reha.thisClass.patpanel.vecaktrez.get(7) );
+						SystemConfig.hmAdrRDaten.put("<Rwegpreis>",RezTools.getPreisAktFromPos(SystemConfig.hmAdrRDaten.get("<Rwegpos>"), "", SystemPreislisten.hmPreise.get(diszi).get(pg)).replace(".",",") );						
+					}else{
+						SystemConfig.hmAdrRDaten.put("<Rhbpos>", "");
+						SystemConfig.hmAdrRDaten.put("<Rhbanzahl>","");
+						SystemConfig.hmAdrRDaten.put("<Rhbpreis>","");
+						SystemConfig.hmAdrRDaten.put("<Rwegpos>", "");
+						SystemConfig.hmAdrRDaten.put("<Rweganzahl>","");
+						SystemConfig.hmAdrRDaten.put("<Rwegpreis>","");						
+					}
+				}catch(Exception ex){
+					ex.printStackTrace();
+				}
+				return null;
+			}
+		}.execute();
+	}
 	public static void constructGanzFreiRezHMap(ZuzahlModell zm){
 		SystemConfig.hmAdrRDaten.put("<Rid>",(String)Reha.thisClass.patpanel.vecaktrez.get(35) );
 		SystemConfig.hmAdrRDaten.put("<Rnummer>",(String)Reha.thisClass.patpanel.vecaktrez.get(1) );
@@ -1998,7 +2059,7 @@ public class RezTools {
 							//testen ob es sich um eine Doppelposition dreht
 							if(debug){
 								Object[] testobj = (Object[])((ArrayList<?>)((Vector<?>)termine).get(4)).get(i);
-								System.out.println(testobj[0]+"-"+testobj[1]+"-"+testobj[2]);
+								//System.out.println(testobj[0]+"-"+testobj[1]+"-"+testobj[2]);
 							}
 							if(((Object[])((ArrayList<?>)((Vector<?>)termine).get(4)).get(i))[0]==Boolean.valueOf(true)){
 								//testen ob es die 1-te Pos der Doppelbehandlung ist
@@ -2007,16 +2068,16 @@ public class RezTools {
 									//Es ist die 1-te Position die voll ist also Ende-Gelände
 									retObj[0] = String.valueOf(termbuf.toString());
 									retObj[1] = Integer.valueOf(RezTools.REZEPT_IST_BEREITS_VOLL);
-									if(debug){System.out.println("erste Position = voll + Doppelbehandlung");}
-									if(debug){System.out.println(hMPos.get(i).hMPosNr+"-"+hMPos.get(i).vOMenge+"-"+hMPos.get(i).anzBBT);}
+									//if(debug){System.out.println("erste Position = voll + Doppelbehandlung");}
+									//if(debug){System.out.println(hMPos.get(i).hMPosNr+"-"+hMPos.get(i).vOMenge+"-"+hMPos.get(i).anzBBT);}
 									return retObj;
 								}
 							}else{
 								//nein keine Doppelposition also Ende-Gelände
 								retObj[0] = String.valueOf(termbuf.toString());
 								retObj[1] = Integer.valueOf(RezTools.REZEPT_IST_BEREITS_VOLL);
-								if(debug){System.out.println("erste Position = voll und keine Doppelbehandlung");}
-								if(debug){System.out.println(hMPos.get(i).hMPosNr+"-"+hMPos.get(i).vOMenge+"-"+hMPos.get(i).anzBBT);}
+								//if(debug){System.out.println("erste Position = voll und keine Doppelbehandlung");}
+								//if(debug){System.out.println(hMPos.get(i).hMPosNr+"-"+hMPos.get(i).vOMenge+"-"+hMPos.get(i).anzBBT);}
 								return retObj;
 							}
 						}else if(!hMPos.get(i).einerOk && (!hMPos.get(i).vorrangig) && j==1){
@@ -2024,19 +2085,19 @@ public class RezTools {
 							//z.B. Ultraschall oder Elektrotherapie
 							retObj[0] = String.valueOf(termbuf.toString());
 							retObj[1] = Integer.valueOf(RezTools.REZEPT_IST_BEREITS_VOLL);
-							if(debug){System.out.println("es geht kein zusätzlicher");}
-							if(debug){System.out.println(hMPos.get(i).hMPosNr+"-"+hMPos.get(i).vOMenge+"-"+hMPos.get(i).anzBBT);}
+							//if(debug){System.out.println("es geht kein zusätzlicher");}
+							//if(debug){System.out.println(hMPos.get(i).hMPosNr+"-"+hMPos.get(i).vOMenge+"-"+hMPos.get(i).anzBBT);}
 							return retObj;
 						}else if( (!hMPos.get(i).vorrangig) && (j==1) && 
 								(Boolean)((ArrayList<?>)((Vector<?>)termine).get(2)).get(i)){
 							//Ein ergänzendes Heilmittel wurde separat verordent das nicht zulässig ist
 							//könnte man auswerten, dann verbaut man sich aber die Möglichkeit
 							//bei PrivatPat. abzurechnen was geht....
-							if(debug){System.out.println("unerlaubtes Ergänzendes Heilmittel solo verordnet");}
-							if(debug){System.out.println(hMPos.get(i).hMPosNr+"-"+hMPos.get(i).vOMenge+"-"+hMPos.get(i).anzBBT);}
+							//if(debug){System.out.println("unerlaubtes Ergänzendes Heilmittel solo verordnet");}
+							//if(debug){System.out.println(hMPos.get(i).hMPosNr+"-"+hMPos.get(i).vOMenge+"-"+hMPos.get(i).anzBBT);}
 						}
-						if(debug){System.out.println("Position kann bestätigt werden");}
-						if(debug){System.out.println(hMPos.get(i).hMPosNr+"-"+hMPos.get(i).vOMenge+"-"+hMPos.get(i).anzBBT);}
+						//if(debug){System.out.println("Position kann bestätigt werden");}
+						//if(debug){System.out.println(hMPos.get(i).hMPosNr+"-"+hMPos.get(i).vOMenge+"-"+hMPos.get(i).anzBBT);}
 					}
 					//Ende nur wenn Tarifgruppe HMR-Gruppe ist
 				}
@@ -2058,7 +2119,7 @@ public class RezTools {
 				if(count==0){
 					retObj[0] = String.valueOf(termbuf.toString());
 					retObj[1] = Integer.valueOf(RezTools.REZEPT_IST_BEREITS_VOLL);
-					if(debug){System.out.println("Rezept war bereits voll");}
+					//if(debug){System.out.println("Rezept war bereits voll");}
 					return retObj;
 				}
 				//Nur Wenn mehrere Behandlungen im Rezept vermerkt
@@ -2136,10 +2197,10 @@ public class RezTools {
 				retObj[0] = String.valueOf(termbuf.toString());
 				retObj[1] = (jetztVoll ? Integer.valueOf(RezTools.REZEPT_IST_JETZ_VOLL) : Integer.valueOf(RezTools.REZEPT_HAT_LUFT ));
 									
-				if(debug){System.out.println("am ende angekommen");}
+				//if(debug){System.out.println("am ende angekommen");}
 				return retObj;
 			}else{
-				System.out.println("*****************IN ELSE***************************");
+				//System.out.println("*****************IN ELSE***************************");
 			}
 			return retObj;
 		}catch(Exception ex){
